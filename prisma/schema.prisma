@@ -5,12 +5,42 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("ENCORE_SQL_VOTEV9_URL")
 }
 
 model User {
-  id      Int    @id @default(autoincrement())
-  name    String
-  surname String
-  age     Int
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  polls Poll[]
+  votes Vote[]
+
+  @@map("users")
+}
+
+model Poll {
+  id        Int    @id @default(autoincrement())
+  question  String
+  options   Json
+  createdBy Int?   @map("created_by")
+  user      User?  @relation(fields: [createdBy], references: [id])
+  votes     Vote[]
+
+  @@map("polls")
+}
+
+model Vote {
+  id     Int    @id @default(autoincrement())
+  pollId Int    @map("poll_id")
+  userId Int    @map("user_id")
+  option String
+
+  poll Poll @relation(fields: [pollId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([pollId, userId])
+  @@map("votes")
 }
