@@ -20,7 +20,7 @@ export class VoteService {
       throw new NotFoundException('Poll not exits');
     }
 
-    const voted = await this.prismaService.vote.create({
+    await this.prismaService.vote.create({
       data: {
         userId,
         pollId,
@@ -29,12 +29,13 @@ export class VoteService {
     });
     const pollAfterVoted = await this.pollService.findOne(pollId);
 
-    const { id, createdBy, ...votePayload } = pollAfterVoted;
-
+    const { id, createdBy, ...rest } = pollAfterVoted;
     const username = createdBy!.username;
-
-
-    return voted;
+    return {
+      id,
+      createdBy,
+      ...rest,
+    };
   }
 
   findAll() {
