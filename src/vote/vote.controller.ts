@@ -1,9 +1,8 @@
 import { api } from 'encore.dev/api';
 import { CreateVoteDto } from './dto/create-vote.dto';
 import applicationContext from '../applicationContext';
-import { getAuthData } from '~encore/internal/auth/auth';
 import { ParseIntPipe } from '@nestjs/common';
-
+import { getAuthData } from '~encore/auth'
 
 export const create = api(
   { expose: true, path: '/vote', method: 'POST', auth: true },
