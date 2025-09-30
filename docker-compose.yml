@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: nestjs-postgres
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nestjs_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nestjs-app
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      # QUAN TRỌNG: Phải dùng 'postgres' (tên service) thay vì 'localhost'
+      DATABASE_URL: "postgresql://votev10-hu72:local@127.0.0.1:9500/votev10?sslmode=disable"
+      NODE_ENV: production
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Debug: In ra env khi start
+    command: sh -c "echo DATABASE_URL=$$DATABASE_URL && npx prisma migrate deploy && node dist/main"
+
+volumes:
+  postgres_data:
