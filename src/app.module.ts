@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
-import { CatsModule } from './cats/cats.module';
-import { UsersModule } from './users/users.module';
+import { PollModule } from './poll/poll.module';
+import { VoteModule } from './vote/vote.module';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [CatsModule, UsersModule, PrismaModule],
+  imports: [PrismaModule, JwtModule, PollModule, VoteModule, UserModule, AuthModule, ConfigModule.forRoot({ isGlobal: true })],
 })
-export class AppModule {}
+export class AppModule {
+}
