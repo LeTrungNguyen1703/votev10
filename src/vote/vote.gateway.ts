@@ -1,40 +1,33 @@
-// Used to pass initial data, optional.
-import { api, StreamOut } from 'encore.dev/api';
-import log from 'encore.dev/log';
+// socket.ts
+import { createServer } from "http";
+import express from "express";
+import { Server } from "socket.io";
 
-interface Handshake {
-  rows: number;
-}
-// What the server sends over the stream.
-interface Message {
-  row: string;
-}
+let io: Server;
 
-export const logStream = api.streamOut<Handshake, Message>(
-  { path: "/logs", expose: true },
-  async (handshake, stream) => {
-    try {
-      for await (const row of mockedLogs(handshake.rows, stream)) {
-        // Send the message to the client
-        await stream.send({ row });
-      }
-    } catch (err) {
-      log.error("Upload error:", err);
-    }
-  },
-);
+export function initSocket(port: number) {
+  const app = express();
+  const httpServer = createServer(app);
 
+  io = new Server(httpServer, {
+    cors: {
+      origin: "*",
+    },
+  });
 
-// This function generates an async iterator that yields mocked log rows
-async function* mockedLogs(rows: number, stream: StreamOut<Message>) {
-  for (let i = 0; i < rows; i++) {
-    yield new Promise<string>((resolve) => {
-      setTimeout(() => {
-        resolve(`Log row ${i + 1}`);
-      }, 500);
+  io.on("connection", (socket) => {
+    console.log("user connected:", socket.id);
+
+    socket.on("vote", (data) => {
+      io.emit("voteCreated", data);
     });
-  }
+  });
 
-  // Close the stream when all logs have been sent
-  await stream.close();
+  httpServer.listen(port, () => {
+    console.log(`Socket.IO listening on ${port}`);
+  });
+}
+
+export function getIoInstance() {
+  return io;
 }

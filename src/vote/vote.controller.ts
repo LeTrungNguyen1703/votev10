@@ -3,13 +3,19 @@ import { CreateVoteDto } from './dto/create-vote.dto';
 import applicationContext from '../applicationContext';
 import { getAuthData } from '~encore/auth';
 import { PollInterface } from '../poll/interfaces/poll.interface';
+import { getIoInstance, initSocket } from './vote.gateway';
+
+initSocket(4001);
 
 export const create = api(
   { expose: true, path: '/vote', method: 'POST', auth: true },
-  async (dto: CreateVoteDto): Promise<{ poll: PollInterface }> => {
+  async (dto: CreateVoteDto): Promise<{ success: true }> => {
     const user = getAuthData();
     const { voteService } = await applicationContext;
-    return { poll: await voteService.create(Number(user!.userID), dto) };
+    const voted = await voteService.create(Number(user!.userID), dto);
+
+    getIoInstance().emit('voteCreated', voted);
+    return { success: true };
   },
 );
 
